@@ -1,0 +1,54 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ include "jackett.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "jackett.name" . }}
+    helm.sh/chart: {{ include "jackett.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "jackett.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "jackett.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.global.jackett.image.repository }}:{{ .Values.global.jackett.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        - name: TZ
+          value: "{{ .Values.global.TZ }}"
+        volumeMounts:
+        - name: jackett-localtime
+          mountPath: /etc/localtime
+        - name: downloads
+          mountPath: /downloads
+        - name: jackett-configs
+          mountPath: /config
+      volumes:
+      - name: jackett-localtime
+        persistentVolumeClaim:
+          claimName: {{ .Values.global.PVC_CLAIM.files }}
+      - name: downloads
+        persistentVolumeClaim:
+          claimName: {{ .Values.global.PVC_CLAIM.downloads }}
+      - name: jackett-configs
+        persistentVolumeClaim:
+          claimName: {{ .Values.global.PVC_CLAIM.files }}
+      
+
+

@@ -1,0 +1,46 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yaml
+    kompose.version: 1.17.0 (a74acad)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: plex-server
+  name: plex-server
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: plex-server
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: Europe/London
+        image: plexinc/pms-docker:latest
+        name: plex-server
+        resources: {}
+        volumeMounts:
+        - mountPath: /config
+          name: plex-server-claim0
+        - mountPath: /transcode
+          name: plex-server-claim1
+        - mountPath: /data
+          name: plex-server-claim2
+      restartPolicy: Always
+      volumes:
+      - name: plex-server-claim0
+        persistentVolumeClaim:
+          claimName: plex-server-claim0
+      - name: plex-server-claim1
+        persistentVolumeClaim:
+          claimName: plex-server-claim1
+      - name: plex-server-claim2
+        persistentVolumeClaim:
+          claimName: plex-server-claim2
+status: {}

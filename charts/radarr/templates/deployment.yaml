@@ -1,0 +1,60 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ include "radarr.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "radarr.name" . }}
+    helm.sh/chart: {{ include "radarr.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "radarr.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "radarr.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.global.radarr.image.repository }}:{{ .Values.global.radarr.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        - name: TZ
+          value: "{{ .Values.global.TZ }}"
+        volumeMounts:
+        - name: radarr-localtime
+          mountPath: /etc/localtime
+        - name: radarr-movies
+          mountPath: /movies
+        - name: downloads
+          mountPath: /downloads
+        - name: radarr-configs
+          mountPath: /config
+      restartPolicy: Always
+      volumes:
+      - name: radarr-localtime
+        persistentVolumeClaim:
+          claimName: {{ .Values.global.PVC_CLAIM.files }}
+      - name: radarr-movies
+        persistentVolumeClaim:
+          claimName: {{ .Values.global.PVC_CLAIM.files }}
+      - name: downloads
+        persistentVolumeClaim:
+          claimName: {{ .Values.global.PVC_CLAIM.downloads }}
+      - name: radarr-configs
+        persistentVolumeClaim:
+          claimName: {{ .Values.global.PVC_CLAIM.files }}
+      
+
+

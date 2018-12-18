@@ -1,0 +1,47 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ include "deluge.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "deluge.name" . }}
+    helm.sh/chart: {{ include "deluge.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "deluge.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "deluge.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.global.deluge.image.repository }}:{{ .Values.global.deluge.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        - name: TZ
+          value: "{{ .Values.global.TZ }}"
+        volumeMounts:
+        - name: downloads
+          mountPath: /downloads
+        - name: deluge-configs
+          mountPath: /config
+      volumes:
+      - name: downloads
+        persistentVolumeClaim:
+          claimName: {{ .Values.global.PVC_CLAIM.downloads }}
+      - name: deluge-configs
+        persistentVolumeClaim:
+          claimName: {{ .Values.global.PVC_CLAIM.files }}
+      
+
+
